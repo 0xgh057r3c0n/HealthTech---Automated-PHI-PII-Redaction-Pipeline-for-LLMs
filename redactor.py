@@ -1,4 +1,8 @@
+import json
+import os
 import re
+import urllib.error
+import urllib.request
 
 try:
     from presidio_analyzer import AnalyzerEngine
@@ -9,13 +13,16 @@ except ImportError:
 
 
 email_pattern = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-phone_pattern = re.compile(r"\b(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})\b")
+phone_pattern = re.compile(r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}")
 date_pattern = re.compile(r"\b(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\d{4}-\d{1,2}-\d{1,2})\b")
-name_pattern = re.compile(r"\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b")
+name_pattern = re.compile(r"\b(?:Mr|Mrs|Ms|Dr|Prof)\.?\s+[A-Z][a-z]+\s+[A-Z][a-z]+\b")
 
 
 analyzer = None
 anonymizer = None
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
 def _instantiate_presidio():
@@ -62,9 +69,61 @@ def _fallback_redact(text: str):
     return redacted, entities
 
 
-def redact_text(text: str):
+def _llm_review(text: str):
+    if not GROQ_API_KEY:
+        return None
+
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are a privacy redaction helper. Return JSON only with keys "
+                    "'redacted_text' and 'entities'. Mask PHI/PII in the text using placeholders "
+                    "<PERSON>, <EMAIL_ADDRESS>, <PHONE_NUMBER>, <DATE_TIME>, <HOSPITAL_NAME>, "
+                    "<LOCATION>."
+                )
+            },
+            {
+                "role": "user",
+                "content": text
+            }
+        ],
+        "temperature": 0.0,
+        "response_format": {"type": "json_object"}
+    }
+
+    request = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except Exception:
+        return None
+
+    try:
+        content = body["choices"][0]["message"]["content"]
+        parsed = json.loads(content)
+        redacted_text = parsed.get("redacted_text") or text
+        return redacted_text, parsed.get("entities", [])
+    except Exception:
+        return None
+
+
+def get_redaction_details(text: str):
     if not analyzer or not anonymizer:
         _instantiate_presidio()
+
+    primary_result = None
 
     if analyzer and anonymizer:
         try:
@@ -74,8 +133,33 @@ def redact_text(text: str):
                 analyzer_results=results
             )
             entities = [result.entity_type for result in results]
-            return anonymized.text, entities
+            primary_result = (anonymized.text, entities)
         except Exception:
             pass
 
-    return _fallback_redact(text)
+    fallback_result = _fallback_redact(text)
+
+    if primary_result is None:
+        primary_result = fallback_result
+
+    llm_result = _llm_review(text)
+    ai_review_enabled = bool(GROQ_API_KEY)
+
+    selected_redacted_text, selected_entities = primary_result
+    if llm_result and llm_result[0] != text:
+        selected_redacted_text, selected_entities = llm_result
+
+    return {
+        "redacted_text": selected_redacted_text,
+        "entities": selected_entities,
+        "fallback_redacted_text": fallback_result[0],
+        "fallback_entities": fallback_result[1],
+        "llm_redacted_text": text,
+        "llm_entities": llm_result[1] if llm_result else [],
+        "ai_review_enabled": ai_review_enabled,
+    }
+
+
+def redact_text(text: str):
+    details = get_redaction_details(text)
+    return details["redacted_text"], details["entities"]

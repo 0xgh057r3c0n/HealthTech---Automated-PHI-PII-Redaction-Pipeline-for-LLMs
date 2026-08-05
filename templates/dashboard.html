@@ -251,6 +251,7 @@
                 <p>Clinical data redaction with secure audit reporting</p>
             </div>
             <div class="pill" id="roleBadge">Protected workflow</div>
+            <div class="pill" id="aiBadge" style="background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #dcfce7;">AI review disabled</div>
         </div>
 
         <div class="content">
@@ -301,6 +302,13 @@
 
                 <div class="stat-label" style="margin-top: 18px;">Redacted Output</div>
                 <div class="output" id="output">No output yet</div>
+
+                <div class="stat-label" style="margin-top: 18px;">Groq-reviewed Redaction</div>
+                <div class="output" id="groqOutput">No AI review yet</div>
+
+                <div class="stat-label" style="margin-top: 18px;">Fallback Redaction Used</div>
+                <div class="output" id="fallbackOutput">No fallback used</div>
+
                 <a class="report-link" id="reportLink" href="#" style="display: none;">Download PDF report</a>
             </section>
         </div>
@@ -349,9 +357,24 @@
             const data = await response.json();
 
             document.getElementById("output").innerText = data.redacted || data.error || "No output yet";
+            document.getElementById("groqOutput").innerText = data.groq_redacted || "No AI review yet";
+            document.getElementById("fallbackOutput").innerText = data.fallback_redacted || "No fallback used";
             document.getElementById("entityCount").innerText = data.entities_found || 0;
             document.getElementById("entityTypes").innerText = data.entity_types ? data.entity_types.join(", ") : "None";
             document.getElementById("latency").innerText = (endTime - startTime) + " ms";
+
+            const aiBadge = document.getElementById("aiBadge");
+            if (data.ai_review_enabled) {
+                aiBadge.innerText = "AI review enabled";
+                aiBadge.style.background = "rgba(56, 189, 248, 0.14)";
+                aiBadge.style.borderColor = "rgba(56, 189, 248, 0.42)";
+                aiBadge.style.color = "#d8f5ff";
+            } else {
+                aiBadge.innerText = "AI review disabled";
+                aiBadge.style.background = "rgba(34, 197, 94, 0.14)";
+                aiBadge.style.borderColor = "rgba(34, 197, 94, 0.35)";
+                aiBadge.style.color = "#dcfce7";
+            }
 
             const reportLink = document.getElementById("reportLink");
             if (data.report_path) {

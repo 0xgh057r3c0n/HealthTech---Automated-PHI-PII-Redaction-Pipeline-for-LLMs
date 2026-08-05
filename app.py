@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 
-from redactor import redact_text
+from redactor import get_redaction_details, redact_text
 
 # ===== ADDED FOR PDF REPORT =====
 from report_generator import generate_report
@@ -382,11 +382,12 @@ def redact(
     # REDACTION ENGINE
 
 
-    redacted_text, entities = redact_text(
-
+    redaction_details = get_redaction_details(
         data.text
-
     )
+
+    redacted_text = redaction_details["redacted_text"]
+    entities = redaction_details["entities"]
 
 
 
@@ -434,6 +435,18 @@ def redact(
 
         "entity_types":
         list(set(entities)),
+
+
+        "fallback_redacted":
+        redaction_details.get("fallback_redacted_text"),
+
+
+        "groq_redacted":
+        redaction_details.get("llm_redacted_text"),
+
+
+        "ai_review_enabled":
+        redaction_details.get("ai_review_enabled", False),
 
 
         # ===== ADDED =====
