@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthTech Secure Access</title>
+    <style>
+        :root {
+            --bg: #06111f;
+            --panel: rgba(12, 28, 50, 0.78);
+            --panel-strong: rgba(16, 33, 61, 0.92);
+            --text: #eff6ff;
+            --muted: #9fb4d0;
+            --accent: #38bdf8;
+            --accent-strong: #2563eb;
+            --accent-soft: rgba(56, 189, 248, 0.18);
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.32), transparent 36%),
+                linear-gradient(135deg, #020617, #0b1220 55%, #10233d);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            filter: blur(18px);
+            opacity: 0.55;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatBlob 10s ease-in-out infinite;
+        }
+
+        body::before {
+            top: -120px;
+            left: -70px;
+            background: rgba(56, 189, 248, 0.24);
+        }
+
+        body::after {
+            right: -100px;
+            bottom: -120px;
+            background: rgba(37, 99, 235, 0.28);
+            animation-delay: -3s;
+        }
+
+        .auth-shell {
+            width: min(100%, 1080px);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 1;
+            transform: translateY(0);
+            animation: riseIn 0.8s ease-out;
+        }
+
+        .brand-panel {
+            padding: 40px 38px;
+            background: linear-gradient(160deg, rgba(8, 15, 30, 0.92), rgba(14, 40, 78, 0.82));
+            position: relative;
+        }
+
+        .brand-panel::after {
+            content: "";
+            position: absolute;
+            inset: auto 24px 24px auto;
+            width: 140px;
+            height: 140px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(56,189,248,0.30), rgba(37,99,235,0.16));
+            border: 1px solid rgba(255,255,255,0.12);
+            transform: rotate(12deg);
+            box-shadow: 0 16px 36px rgba(0,0,0,0.25);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(56, 189, 248, 0.14);
+            color: #c8f0ff;
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .brand-title {
+            margin: 20px 0 12px;
+            font-size: 2.2rem;
+            line-height: 1.05;
+        }
+
+        .brand-copy {
+            color: var(--muted);
+            font-size: 1rem;
+            max-width: 520px;
+            line-height: 1.7;
+        }
+
+        .feature-list {
+            margin: 24px 0 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #dbeafe;
+        }
+
+        .feature-list span {
+            display: inline-grid;
+            place-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(34, 197, 94, 0.18);
+            color: #bbf7d0;
+            font-size: 13px;
+        }
+
+        .form-panel {
+            padding: 40px 34px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .auth-card h2 {
+            margin: 0 0 8px;
+            font-size: 1.7rem;
+        }
+
+        .subtext {
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #dbeafe;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            margin-bottom: 18px;
+            padding: 13px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            font-size: 0.98rem;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: rgba(56, 189, 248, 0.8);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px 18px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.35);
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.48);
+        }
+
+        .toggle-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .toggle-btn {
+            flex: 1;
+            background: transparent;
+            color: #dbeafe;
+            border: 1px solid transparent;
+            box-shadow: none;
+            transition: all 0.25s ease;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: white;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 16px;
+            padding: 14px;
+            color: #dbeafe;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(56, 189, 248, 0.55);
+        }
+
+        .status-line {
+            margin-top: 14px;
+            text-align: center;
+            color: #bfdbfe;
+            font-size: 0.92rem;
+        }
+
+        .hidden { display: none; }
+
+        @keyframes floatBlob {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-18px) scale(1.04); }
+        }
+
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(18px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @media (max-width: 840px) {
+            .auth-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .brand-panel,
+            .form-panel {
+                padding: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-shell">
+        <section class="brand-panel">
+            <div class="eyebrow">Healthcare Privacy Suite</div>
+            <h1 class="brand-title">Secure PHI/PII redaction for clinical AI workflows.</h1>
+            <p class="brand-copy">
+                Protect patient information before it leaves your secure environment. This portal lets
+                healthcare staff safely redact names, emails, phone numbers, dates, and other sensitive fields.
+            </p>
+
+            <ul class="feature-list">
+                <li><span>✓</span> Instant clinical note redaction</li>
+                <li><span>✓</span> Role-based access workflow</li>
+                <li><span>✓</span> PDF audit reporting for privacy review</li>
+            </ul>
+
+            <div class="feature-grid">
+                <div class="feature-card">HIPAA-aware guardrails</div>
+                <div class="feature-card">Smart masking for PHI/PII</div>
+                <div class="feature-card">Audit-ready reports</div>
+            </div>
+        </section>
+
+        <section class="form-panel">
+            <div class="auth-card">
+                <div class="toggle-row">
+                    <button class="toggle-btn active" id="loginBtn" type="button" onclick="showLogin()">Login</button>
+                    <button class="toggle-btn" id="registerBtn" type="button" onclick="showRegister()">Register</button>
+                </div>
+
+                <div id="loginForm">
+                    <h2>Sign in</h2>
+                    <p class="subtext">Use your secure care-team credentials.</p>
+                    <label for="user">Username</label>
+                    <input id="user" placeholder="Enter username" />
+                    <label for="pass">Password</label>
+                    <input id="pass" type="password" placeholder="Enter password" />
+                    <button onclick="login()">Open Dashboard</button>
+                </div>
+
+                <div id="registerForm" class="hidden">
+                    <h2>Create account</h2>
+                    <p class="subtext">Register with email OTP verification.</p>
+                    <label for="regUser">Username</label>
+                    <input id="regUser" placeholder="Choose username" />
+                    <label for="regEmail">Email</label>
+                    <input id="regEmail" placeholder="Enter email" />
+                    <label for="regPass">Password</label>
+                    <input id="regPass" type="password" placeholder="Create password" />
+                    <label for="regRole">Role</label>
+                    <select id="regRole">
+                        <option value="patient">Patient</option>
+                        <option value="doctor">Doctor</option>
+                    </select>
+                    <button onclick="registerSendOtp()">Send OTP</button>
+                    <div id="otpSection" class="hidden" style="margin-top: 14px;">
+                        <label for="regOtp">OTP Code</label>
+                        <input id="regOtp" placeholder="Enter OTP" />
+                        <button onclick="registerVerify()">Verify & Complete</button>
+                    </div>
+                </div>
+
+                <div class="status-line">Demo users: doctor1 / patient1 · password: 1234</div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function showLogin() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('loginBtn').classList.add('active');
+            document.getElementById('registerBtn').classList.remove('active');
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('registerBtn').classList.add('active');
+            document.getElementById('loginBtn').classList.remove('active');
+        }
+
+        async function login() {
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("user").value,
+                    password: document.getElementById("pass").value
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("role", data.role);
+                window.location.href = "/dashboard";
+            } else {
+                alert(data.error || "Unable to login.");
+            }
+        }
+
+        async function registerSendOtp() {
+            const response = await fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("regUser").value,
+                    email: document.getElementById("regEmail").value,
+                    password: document.getElementById("regPass").value,
+                    role: document.getElementById("regRole").value
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            document.getElementById("otpSection").classList.remove("hidden");
+            alert("OTP sent to your email. Use the code shown in the server terminal.");
+        }
+
+        async function registerVerify() {
+            const response = await fetch("/register/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("regUser").value,
+                    email: document.getElementById("regEmail").value,
+                    otp: document.getElementById("regOtp").value,
+                    password: document.getElementById("regPass").value,
+                    role: document.getElementById("regRole").value
+                })
+            });
+
+            const data = await response.json();
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+                localStorage.setItem("role", data.role);
+                window.location.href = "/dashboard";
+            } else {
+                alert(data.error || "Registration failed.");
+            }
+        }
+    </script>
+</body>
+</html>

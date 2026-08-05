@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HealthTech Privacy Dashboard</title>
+    <style>
+        :root {
+            --bg: #05101d;
+            --panel: rgba(8, 21, 39, 0.82);
+            --panel-strong: rgba(13, 32, 58, 0.95);
+            --text: #eff6ff;
+            --muted: #9fb4d0;
+            --accent: #38bdf8;
+            --accent-strong: #2563eb;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border: rgba(255, 255, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.24), transparent 32%),
+                linear-gradient(135deg, #020617, #0b1120 55%, #0a1c31);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+            animation: dashboardRise 0.7s ease-out;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 24px 28px;
+            background: linear-gradient(180deg, rgba(14, 31, 58, 0.96), rgba(8, 20, 37, 0.96));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .title-wrap h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .title-wrap p {
+            margin: 6px 0 0;
+            color: var(--muted);
+        }
+
+        .pill {
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.14);
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            color: #d8f5ff;
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 20px;
+            padding: 24px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(56, 189, 248, 0.45);
+            box-shadow: 0 16px 30px rgba(14, 35, 66, 0.35);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            color: #dbeafe;
+            font-weight: 700;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 13px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            outline: none;
+        }
+
+        input:focus, textarea:focus {
+            border-color: rgba(56, 189, 248, 0.85);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+        }
+
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        button {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: white;
+        }
+
+        .secondary {
+            background: rgba(239, 68, 68, 0.14);
+            color: #fecaca;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #f8fbff;
+        }
+
+        .result-title {
+            margin-top: 0;
+            color: #dbeafe;
+        }
+
+        .output {
+            background: rgba(4, 12, 25, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px;
+            border-radius: 14px;
+            line-height: 1.6;
+            color: #f8fbff;
+            white-space: pre-wrap;
+            min-height: 150px;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .report-link {
+            margin-top: 12px;
+            display: inline-block;
+            color: #8ee1ff;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @keyframes dashboardRise {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .grid,
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="topbar">
+            <div class="title-wrap">
+                <h1>🏥 HealthTech Privacy Dashboard</h1>
+                <p>Clinical data redaction with secure audit reporting</p>
+            </div>
+            <div class="pill" id="roleBadge">Protected workflow</div>
+        </div>
+
+        <div class="content">
+            <section class="card">
+                <div id="patientPanel">
+                    <div class="grid">
+                        <div class="field"><label>Patient First Name</label><input id="firstName" /></div>
+                        <div class="field"><label>Patient Last Name</label><input id="lastName" /></div>
+                        <div class="field"><label>Email</label><input id="email" /></div>
+                        <div class="field"><label>Phone Number</label><input id="phone" /></div>
+                        <div class="field"><label>Hospital Name</label><input id="hospital" /></div>
+                        <div class="field"><label>Disease</label><input id="disease" /></div>
+                        <div class="field"><label>Doctor Name</label><input id="doctor" /></div>
+                        <div class="field"><label>City</label><input id="city" /></div>
+                    </div>
+                </div>
+
+                <div id="doctorPanel" style="display: none;">
+                    <div class="grid">
+                        <div class="field"><label>Doctor Name</label><input id="doctorName" /></div>
+                        <div class="field"><label>Specialty</label><input id="specialty" /></div>
+                        <div class="field"><label>Patient ID</label><input id="patientId" /></div>
+                        <div class="field"><label>Clinical Note</label><textarea id="clinicalNote"></textarea></div>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <button class="primary" onclick="redactText()">Generate Safe Output</button>
+                    <button class="secondary" onclick="logout()">Logout</button>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="result-title">Redaction Overview</h2>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Entities Found</div>
+                        <div class="stat-value" id="entityCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">API Latency</div>
+                        <div class="stat-value" id="latency">0 ms</div>
+                    </div>
+                </div>
+
+                <div class="stat-label" style="margin-top: 18px;">Detected Entity Types</div>
+                <div class="output" id="entityTypes">None</div>
+
+                <div class="stat-label" style="margin-top: 18px;">Redacted Output</div>
+                <div class="output" id="output">No output yet</div>
+                <a class="report-link" id="reportLink" href="#" style="display: none;">Download PDF report</a>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem("token");
+        const role = (localStorage.getItem("role") || "patient").toLowerCase();
+
+        if (!token) {
+            window.location.href = "/";
+        }
+
+        document.getElementById("roleBadge").innerText = "Role: " + role;
+
+        if (role === "doctor") {
+            document.getElementById("doctorPanel").style.display = "block";
+            document.getElementById("patientPanel").style.display = "none";
+        } else {
+            document.getElementById("patientPanel").style.display = "block";
+            document.getElementById("doctorPanel").style.display = "none";
+        }
+
+        function buildTextPayload() {
+            if (role === "doctor") {
+                return `Doctor Name:\n${document.getElementById("doctorName").value}\n\nSpecialty:\n${document.getElementById("specialty").value}\n\nPatient ID:\n${document.getElementById("patientId").value}\n\nClinical Note:\n${document.getElementById("clinicalNote").value}`;
+            }
+
+            return `Patient Name:\n${document.getElementById("firstName").value} ${document.getElementById("lastName").value}\n\nEmail:\n${document.getElementById("email").value}\n\nPhone:\n${document.getElementById("phone").value}\n\nHospital:\n${document.getElementById("hospital").value}\n\nDisease:\n${document.getElementById("disease").value}\n\nDoctor:\n${document.getElementById("doctor").value}\n\nCity:\n${document.getElementById("city").value}`;
+        }
+
+        async function redactText() {
+            let text = buildTextPayload();
+            let startTime = Date.now();
+
+            const response = await fetch("/redact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ text: text })
+            });
+
+            let endTime = Date.now();
+            const data = await response.json();
+
+            document.getElementById("output").innerText = data.redacted || data.error || "No output yet";
+            document.getElementById("entityCount").innerText = data.entities_found || 0;
+            document.getElementById("entityTypes").innerText = data.entity_types ? data.entity_types.join(", ") : "None";
+            document.getElementById("latency").innerText = (endTime - startTime) + " ms";
+
+            const reportLink = document.getElementById("reportLink");
+            if (data.report_path) {
+                reportLink.style.display = "inline-block";
+                reportLink.href = "/" + data.report_path.replace(/\\/g, "/");
+                reportLink.innerText = "Download PDF report";
+            } else {
+                reportLink.style.display = "none";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("role");
+            window.location.href = "/";
+        }
+    </script>
+</body>
+</html>
