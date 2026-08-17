@@ -299,6 +299,7 @@
                         <div class="field"><label>Disease</label><input id="disease" placeholder="e.g. Diabetes" /></div>
                         <div class="field"><label>Doctor Name</label><input id="doctor" placeholder="e.g. Dr. Emily Carter" /></div>
                         <div class="field"><label>City</label><input id="city" placeholder="e.g. Boston" /></div>
+                        <div class="field" style="grid-column: 1 / -1;"><label>Doctor Recommendation / What the patient should do</label><textarea id="doctorAdvice" placeholder="e.g. Continue hydration, follow-up in 2 weeks, and report persistent dizziness..."></textarea></div>
                     </div>
                 </div>
 
@@ -308,6 +309,7 @@
                         <div class="field"><label>Specialty</label><input id="specialty" placeholder="e.g. Cardiology" /></div>
                         <div class="field"><label>Patient ID</label><input id="patientId" placeholder="e.g. MRN-2048" /></div>
                         <div class="field" style="grid-column: 1 / -1;"><label>Clinical Note</label><textarea id="clinicalNote" placeholder="Paste the consultation note or transcript here..."></textarea></div>
+                        <div class="field" style="grid-column: 1 / -1;"><label>Doctor Recommendation / What the patient should do</label><textarea id="doctorRecommendation" placeholder="e.g. Patient should rest, hydrate, and return if symptoms worsen..."></textarea></div>
                     </div>
                 </div>
 
@@ -318,30 +320,8 @@
             </section>
 
             <section class="card">
-                <h2 class="result-title">Redaction Overview</h2>
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-label">Entities Found</div>
-                        <div class="stat-value" id="entityCount">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">API Latency</div>
-                        <div class="stat-value" id="latency">0 ms</div>
-                    </div>
-                </div>
-
-                <div class="stat-label" style="margin-top: 18px;">Detected Entity Types</div>
-                <div class="output" id="entityTypes">None</div>
-
-                <div class="stat-label" style="margin-top: 18px;">Redacted Output</div>
-                <div class="output" id="output">No output yet</div>
-
-                <div class="stat-label" style="margin-top: 18px;">Live AI Review Output</div>
-                <div class="output" id="groqOutput">No AI review yet</div>
-
-                <div class="stat-label" style="margin-top: 18px;">Fallback Redaction Used</div>
-                <div class="output" id="fallbackOutput">No fallback used</div>
-
+                <h2 class="result-title">Clinical Summary</h2>
+                <div class="output" id="output">No clinical summary yet</div>
                 <a class="report-link" id="reportLink" href="#" style="display: none;">Download PDF report</a>
             </section>
         </div>
@@ -375,10 +355,10 @@
 
         function buildTextPayload() {
             if (role === "doctor") {
-                return `Doctor Name:\n${document.getElementById("doctorName").value}\n\nSpecialty:\n${document.getElementById("specialty").value}\n\nPatient ID:\n${document.getElementById("patientId").value}\n\nClinical Note:\n${document.getElementById("clinicalNote").value}`;
+                return `Doctor Name:\n${document.getElementById("doctorName").value}\n\nSpecialty:\n${document.getElementById("specialty").value}\n\nPatient ID:\n${document.getElementById("patientId").value}\n\nClinical Note:\n${document.getElementById("clinicalNote").value}\n\nDoctor Recommendation:\n${document.getElementById("doctorRecommendation").value}`;
             }
 
-            return `Patient Name:\n${document.getElementById("firstName").value} ${document.getElementById("lastName").value}\n\nEmail:\n${document.getElementById("email").value}\n\nPhone:\n${document.getElementById("phone").value}\n\nHospital:\n${document.getElementById("hospital").value}\n\nDisease:\n${document.getElementById("disease").value}\n\nDoctor:\n${document.getElementById("doctor").value}\n\nCity:\n${document.getElementById("city").value}`;
+            return `Patient Name:\n${document.getElementById("firstName").value} ${document.getElementById("lastName").value}\n\nEmail:\n${document.getElementById("email").value}\n\nPhone:\n${document.getElementById("phone").value}\n\nHospital:\n${document.getElementById("hospital").value}\n\nDisease:\n${document.getElementById("disease").value}\n\nDoctor:\n${document.getElementById("doctor").value}\n\nCity:\n${document.getElementById("city").value}\n\nDoctor Recommendation:\n${document.getElementById("doctorAdvice").value}`;
         }
 
         async function redactText() {
@@ -397,12 +377,12 @@
             let endTime = Date.now();
             const data = await response.json();
 
-            document.getElementById("output").innerText = data.redacted || data.error || "No output yet";
-            document.getElementById("groqOutput").innerText = data.groq_redacted || "No AI review yet";
-            document.getElementById("fallbackOutput").innerText = data.fallback_redacted || "No fallback used";
-            document.getElementById("entityCount").innerText = data.entities_found || 0;
-            document.getElementById("entityTypes").innerText = data.entity_types ? data.entity_types.join(", ") : "None";
-            document.getElementById("latency").innerText = (endTime - startTime) + " ms";
+            const outputBox = document.getElementById("output");
+            if (data.report_path) {
+                outputBox.innerText = "Clinical note and doctor guidance are ready in the PDF report.";
+            } else {
+                outputBox.innerText = data.error || "No clinical summary yet";
+            }
 
             const aiBadge = document.getElementById("aiBadge");
             if (data.ai_review_enabled) {
