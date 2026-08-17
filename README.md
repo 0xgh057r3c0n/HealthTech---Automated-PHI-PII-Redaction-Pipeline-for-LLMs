@@ -1,127 +1,138 @@
-# 🏥 HealthTech PHI/PII Redaction Pipeline
+# HealthTech PHI/PII Redaction Pipeline
 
-A secure healthcare privacy workflow for detecting, masking, and reviewing Protected Health Information (PHI) and Personally Identifiable Information (PII) before any clinical text is sent to external AI systems.
+A healthcare privacy and clinical documentation workflow for detecting, masking, and auditing protected health information (PHI) and personally identifiable information (PII) before any clinical content is sent to external AI systems.
 
-Built and maintained by: 0xgh057r3c0n
-
----
-
-## 📌 Project Overview
-
-This project is a FastAPI-based healthcare privacy application that gives doctors and patients a protected interface for:
-
-- entering clinical or patient-related text
-- generating a safe redacted output
-- reviewing fallback and AI-assisted results
-- downloading a PDF report of the redaction process
-
-The application is designed to help healthcare teams reduce privacy exposure when working with LLM-based processing pipelines.
+This application is designed for secure patient and doctor workflows, with a professional UI and a downloadable PDF report that preserves core clinical context while protecting identifying data.
 
 ---
 
-## 🎯 Core Problem
+## What the application does
 
-Healthcare organizations often need to use AI helpers for summarization, documentation, or triage. Sending raw patient information to an external model can create privacy, compliance, and governance risks.
+This project performs the following core functions:
 
-This project introduces a controlled layer that:
-
-- detects sensitive fields such as names, emails, phone numbers, dates, and locations
-- masks them in the protected output
-- keeps the workflow role-aware for doctor and patient use cases
-- optionally uses an AI review model for a separate review-only experience
+- accepts patient or doctor clinical text through a web dashboard
+- identifies PHI/PII such as names, emails, phone numbers, dates, and hospital/location references
+- redacts sensitive values before safe downstream processing
+- keeps the clinical note and doctor recommendations usable for review
+- generates a professional PDF report for audit and record keeping
+- supports role-aware workflows for patient and doctor users
+- provides protected, token-based access to the redaction API
 
 ---
 
-## ✨ Features Included
+## What the application has
 
-### Authentication and Access Control
-- JWT-based login workflow
-- Role-aware user access for doctor and patient flows
-- Protected redaction endpoint using bearer-token authentication
-- Demo in-memory user store for local testing
+### Role-based healthcare dashboard
+- Patient workflow for intake and health-note input
+- Doctor workflow for clinical note entry and patient guidance notes
+- Separate UI states depending on the signed-in role
+- Secure authentication using JWT tokens
 
-### Registration and OTP Workflow
-- User registration flow
-- OTP generation and verification
-- Email-based OTP simulation for local demo use
-- Expiry handling for OTP tokens
-
-### Redaction Engine
-- Microsoft Presidio-powered entity detection
-- Regex fallback masking for missing NLP coverage
-- Support for detection and masking of:
+### PHI/PII detection and masking engine
+- Microsoft Presidio integration when available
+- Regex-based fallback masking when Presidio is unavailable
+- Entity detection for categories including:
   - PERSON
   - EMAIL_ADDRESS
   - PHONE_NUMBER
   - DATE_TIME
-  - LOCATION
   - HOSPITAL_NAME
+  - LOCATION
 
-### AI Review Integration
-- Optional Groq-based review hook
-- Separate AI-review output panel in the dashboard
-- Review-only behavior to keep the primary workflow masked and protected
-- AI badge state to show whether the review feature is enabled or unavailable
+### Protected redaction API
+- FastAPI backend with a protected /redact endpoint
+- Bearer token validation
+- Safe return payload with redacted output and detected entity list
+- Optionally includes AI review metadata when available
 
-### Dashboard Experience
-- Doctor dashboard and patient dashboard role split
-- Modern glassmorphism / healthcare-style UI
-- Interactive form generation and action buttons
-- Separate panels for:
-  - redacted output
-  - fallback redaction output
-  - Groq AI review output
-  - detected entity summary
-  - report download link
+### Clinical report generation
+- Generates a downloadable PDF report for each redaction session
+- Includes patient and doctor details in a professional report header/summary
+- Preserves doctor advice and recommended actions for the patient
+- Lists the clinical note, guidance, and audit sections
+- Includes redacted output and compliance-style summary sections
 
-### Reporting
-- PDF report generation for each redaction run
-- Downloadable result artifact stored in the reports folder
+### OTP and registration flow
+- Basic registration endpoint
+- OTP-based verification flow for demo/local use
+- Email-based OTP simulation suitable for local testing
 
-### UX and Workflow
-- Responsive frontend
-- FastAPI backend with templated HTML pages
-- Clean login and dashboard flow
-- Demo login credentials for manual testing
+### Modern frontend
+- Responsive HTML/CSS/JavaScript dashboard
+- Clinical privacy styling with secure workflow look and feel
+- Download link for generated PDF reports
+- AI review status indicator and redaction summary output
 
 ---
 
-## 🏗️ System Architecture
+## What the application can do
 
-```text
-User Browser
-    ↓
-FastAPI App
-    ├── Auth Layer
-    ├── OTP Registration Flow
-    ├── Protected Redaction API
-    ├── PDF Report Generator
-    └── Optional Groq Review Hook
-    ↓
-Redaction Engine
-    ├── Presidio NLP Detection
-    └── Regex Fallback Masking
-    ↓
-Safe Dashboard Output
-```
+The app can:
+
+- redact names, emails, contact numbers, dates, locations, and hospital references from clinical text
+- preserve the useful medical context while removing direct identifiers
+- support doctor-patient interactions in a healthcare-like legal/privacy workflow
+- create a PDF audit report that looks closer to a real medical document than a demo output
+- help reduce re-identification risk before sending text to external AI tools
+- generate shareable, downloadable protected output artifacts
+- run as a local prototype or demo for privacy-preserving clinical AI workflows
 
 ---
 
-## 🛠️ Technologies Used
+## Supported workflow
+
+The application supports a typical clinical privacy workflow like this:
+
+1. User logs in with a demo patient or doctor account.
+2. User enters patient information or doctor notes in the dashboard.
+3. The system detects sensitive data and creates a redacted version.
+4. The backend stores or returns the safe clinical content.
+5. A PDF audit report is generated with the protected version and key sections.
+6. The user can download the resulting report for review or documentation.
+
+---
+
+## Example use cases
+
+- patient intake form redaction before AI review
+- doctor consultation note protection
+- clinical summarization workflow with privacy safeguards
+- hospital-like report creation with masked PHI and preserved medical instructions
+- AI-assisted healthcare documentation without exposing direct identifiers
+
+---
+
+## Current app pages
+
+### Home page
+- URL: http://127.0.0.1:8000/
+- login and account flow entry point
+
+### Dashboard
+- URL: http://127.0.0.1:8000/dashboard
+- primary workflow interface for patient and doctor use cases
+
+### Generated report download
+- URL pattern: http://127.0.0.1:8000/reports/{filename}.pdf
+- downloadable redaction audit report
+
+---
+
+## Tech stack
 
 - Python
 - FastAPI
-- Jinja2 Templates
-- JWT / jose
+- Jinja2 templates
+- JWT authentication
 - Microsoft Presidio
-- Regex-based privacy masking
-- HTML / CSS / JavaScript
-- PDF report generation
-- Optional Groq API integration
+- Regex-based fallback redaction
+- HTML/CSS/JavaScript
+- ReportLab PDF generation
+- Optional Groq AI review hook
 
 ---
 
-## 📁 Project Structure
+## Project structure
 
 ```text
 HealthTech---Automated-PHI-PII-Redaction-Pipeline-for-LLMs/
@@ -136,64 +147,47 @@ HealthTech---Automated-PHI-PII-Redaction-Pipeline-for-LLMs/
 ├── templates/
 │   ├── index.html
 │   └── dashboard.html
-└── reports/
+├── reports/
+└── .gitignore
 ```
 
 ---
 
-## 🚀 Demo Credentials
+## Demo credentials
 
-Use these demo accounts for local manual testing:
+Use these local test accounts:
 
 - Doctor
-  - Username: `doctor1`
-  - Password: `1234`
+  - Username: doctor1
+  - Password: 1234
 
 - Patient
-  - Username: `patient1`
-  - Password: `1234`
+  - Username: patient1
+  - Password: 1234
 
 ---
 
-## 🧪 Example Test Input
+## Local run instructions
 
-```text
-Contact Dr. John Smith at john.smith@example.com or (555) 123-4567 on 2026-08-05.
-```
-
-### Expected Protected Output
-
-```text
-Contact Dr. <PERSON> at <EMAIL_ADDRESS> or <PHONE_NUMBER> on <DATE_TIME>.
-```
-
-### Expected AI Review Panel
-
-The AI review section is designed to show the raw review payload or original input in a separate non-masking review view, while the main output remains protected.
-
----
-
-## ▶️ How to Run
-
-### 1. Install dependencies
+1. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Start the app
+2. Start the application:
 
 ```bash
-uvicorn app:app --reload
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
-### 3. Open the app
+3. Open the app in a browser:
 
 ```text
 http://127.0.0.1:8000/
 ```
 
-### 4. Open the dashboard after login
+4. After login, open the dashboard:
 
 ```text
 http://127.0.0.1:8000/dashboard
@@ -201,23 +195,50 @@ http://127.0.0.1:8000/dashboard
 
 ---
 
-## 📦 What This Project Delivers
+## Example clinical input
 
-This project provides a complete healthcare privacy redaction MVP with:
+```text
+Patient Name:
+John Smith
 
-- secure masked output generation
-- role-specific doctor/patient workflow
-- OTP-based account registration flow
-- protected redaction API
-- dashboard-driven user experience
-- PDF report generation
-- optional AI review integration
-- a modern polished frontend experience
+Doctor Name:
+Dr. Emily Carter
+
+Email:
+john.smith@example.com
+
+Phone:
++918876072154
+
+Hospital:
+St. Mary Hospital
+
+Clinical Note:
+Patient reports mild dizziness and fatigue over the last 2 days.
+
+Doctor Recommendation:
+Patient should rest, drink fluids, and follow up in 7 days if symptoms continue.
+```
+
+The system will redact identifying data such as the email, phone, hospital name, and patient name in the safe output while preserving the clinical guidance and note content.
 
 ---
 
-## 👨‍💻 Author
+## Privacy and compliance intent
 
-**0xgh057r3c0n**
+This project is a demonstration/privacy-protection layer meant to reduce risk when clinical or patient information is handled by AI services. It is not a medical compliance system by itself, but it provides a realistic starting point for secure PHI/PII handling in healthcare AI workflows.
 
-HealthTech Privacy + AI Redaction Pipeline
+---
+
+## Summary
+
+This project is a privacy-first healthcare application that can:
+
+- detect PHI/PII
+- redact it safely
+- show the result in a clinician-friendly dashboard
+- support doctor/patient workflows
+- generate a professional PDF report
+- help reduce privacy risk before external AI processing
+
+It is best described as a healthcare data redaction and audit workflow built for secure clinical AI use.
