@@ -74,6 +74,32 @@
             font-weight: 600;
         }
 
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .role-banner {
+            margin-bottom: 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(56, 189, 248, 0.24);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(37, 99, 235, 0.12));
+        }
+
+        .role-banner strong {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .role-banner span {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
         .content {
             display: grid;
             grid-template-columns: 1.05fr 0.95fr;
@@ -250,31 +276,38 @@
                 <h1>🏥 HealthTech Privacy Dashboard</h1>
                 <p>Clinical data redaction with secure audit reporting</p>
             </div>
-            <div class="pill" id="roleBadge">Protected workflow</div>
-            <div class="pill" id="aiBadge" style="background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #dcfce7;">AI review disabled</div>
+            <div class="header-meta">
+                <div class="pill" id="roleBadge">Protected workflow</div>
+                <div class="pill" id="aiBadge" style="background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #dcfce7;">AI review disabled</div>
+            </div>
         </div>
 
         <div class="content">
             <section class="card">
+                <div class="role-banner" id="roleBanner">
+                    <strong id="roleBannerTitle">Patient intake workflow</strong>
+                    <span id="roleBannerText">Capture patient details and redact PHI before external AI processing.</span>
+                </div>
+
                 <div id="patientPanel">
                     <div class="grid">
-                        <div class="field"><label>Patient First Name</label><input id="firstName" /></div>
-                        <div class="field"><label>Patient Last Name</label><input id="lastName" /></div>
-                        <div class="field"><label>Email</label><input id="email" /></div>
-                        <div class="field"><label>Phone Number</label><input id="phone" /></div>
-                        <div class="field"><label>Hospital Name</label><input id="hospital" /></div>
-                        <div class="field"><label>Disease</label><input id="disease" /></div>
-                        <div class="field"><label>Doctor Name</label><input id="doctor" /></div>
-                        <div class="field"><label>City</label><input id="city" /></div>
+                        <div class="field"><label>Patient First Name</label><input id="firstName" placeholder="e.g. John" /></div>
+                        <div class="field"><label>Patient Last Name</label><input id="lastName" placeholder="e.g. Smith" /></div>
+                        <div class="field"><label>Email</label><input id="email" placeholder="e.g. john.smith@example.com" /></div>
+                        <div class="field"><label>Phone Number</label><input id="phone" placeholder="e.g. +1 (555) 123-4567" /></div>
+                        <div class="field"><label>Hospital Name</label><input id="hospital" placeholder="e.g. St. Mary’s Hospital" /></div>
+                        <div class="field"><label>Disease</label><input id="disease" placeholder="e.g. Diabetes" /></div>
+                        <div class="field"><label>Doctor Name</label><input id="doctor" placeholder="e.g. Dr. Emily Carter" /></div>
+                        <div class="field"><label>City</label><input id="city" placeholder="e.g. Boston" /></div>
                     </div>
                 </div>
 
                 <div id="doctorPanel" style="display: none;">
                     <div class="grid">
-                        <div class="field"><label>Doctor Name</label><input id="doctorName" /></div>
-                        <div class="field"><label>Specialty</label><input id="specialty" /></div>
-                        <div class="field"><label>Patient ID</label><input id="patientId" /></div>
-                        <div class="field"><label>Clinical Note</label><textarea id="clinicalNote"></textarea></div>
+                        <div class="field"><label>Doctor Name</label><input id="doctorName" placeholder="e.g. Dr. Adams" /></div>
+                        <div class="field"><label>Specialty</label><input id="specialty" placeholder="e.g. Cardiology" /></div>
+                        <div class="field"><label>Patient ID</label><input id="patientId" placeholder="e.g. MRN-2048" /></div>
+                        <div class="field" style="grid-column: 1 / -1;"><label>Clinical Note</label><textarea id="clinicalNote" placeholder="Paste the consultation note or transcript here..."></textarea></div>
                     </div>
                 </div>
 
@@ -303,7 +336,7 @@
                 <div class="stat-label" style="margin-top: 18px;">Redacted Output</div>
                 <div class="output" id="output">No output yet</div>
 
-                <div class="stat-label" style="margin-top: 18px;">Groq-reviewed Redaction</div>
+                <div class="stat-label" style="margin-top: 18px;">Live AI Review Output</div>
                 <div class="output" id="groqOutput">No AI review yet</div>
 
                 <div class="stat-label" style="margin-top: 18px;">Fallback Redaction Used</div>
@@ -322,12 +355,20 @@
             window.location.href = "/";
         }
 
-        document.getElementById("roleBadge").innerText = "Role: " + role;
+        const roleBadge = document.getElementById("roleBadge");
+        const roleBannerTitle = document.getElementById("roleBannerTitle");
+        const roleBannerText = document.getElementById("roleBannerText");
 
         if (role === "doctor") {
+            roleBadge.innerText = "Doctor workflow";
+            roleBannerTitle.innerText = "Doctor clinical review workflow";
+            roleBannerText.innerText = "Review and redact clinical notes in a physician-facing secure workspace.";
             document.getElementById("doctorPanel").style.display = "block";
             document.getElementById("patientPanel").style.display = "none";
         } else {
+            roleBadge.innerText = "Patient workflow";
+            roleBannerTitle.innerText = "Patient intake workflow";
+            roleBannerText.innerText = "Capture patient details and redact all PHI before external AI processing.";
             document.getElementById("patientPanel").style.display = "block";
             document.getElementById("doctorPanel").style.display = "none";
         }

@@ -79,10 +79,12 @@ def _llm_review(text: str):
             {
                 "role": "system",
                 "content": (
-                    "You are a privacy redaction helper. Return JSON only with keys "
-                    "'redacted_text' and 'entities'. Mask PHI/PII in the text using placeholders "
-                    "<PERSON>, <EMAIL_ADDRESS>, <PHONE_NUMBER>, <DATE_TIME>, <HOSPITAL_NAME>, "
-                    "<LOCATION>."
+                    "You are a healthcare privacy review assistant. Return JSON only with keys "
+                    "'redacted_text' and 'entities'. The 'redacted_text' value must be a short, "
+                    "generic AI review sentence that says the input contains sensitive clinical or "
+                    "personal data and should be handled in a protected workflow. Do NOT echo the "
+                    "original input back. Do NOT reveal names, emails, phone numbers, IDs, or dates. "
+                    "Return a concise review-style statement instead."
                 )
             },
             {
