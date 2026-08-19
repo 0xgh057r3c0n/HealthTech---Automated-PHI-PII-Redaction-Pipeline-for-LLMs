@@ -1,17 +1,19 @@
 import os
 import json
 import requests
-from typing import Any
+import base64
+from dotenv import load_dotenv
 
-# SendGrid integration (free tier available for light use). Requires SIGNUP but no paid plan for small volume.
+load_dotenv()
+
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "no-reply@example.com")
 SENDGRID_URL = "https://api.sendgrid.com/v3/mail/send"
 
 
-def _send_via_sendgrid(recipient_email: str, subject: str, text: str, html: str) -> bool:
+def _send_via_sendgrid(recipient_email: str, subject: str, text: str, html: str, attachments=None) -> bool:
     if not SENDGRID_API_KEY:
-        print("SendGrid API key not set — OTP (dev fallback):", text)
+        print("SendGrid API key not set — fallback email payload:\n", text)
         return False
 
     payload = {
@@ -26,38 +28,52 @@ def _send_via_sendgrid(recipient_email: str, subject: str, text: str, html: str)
         ]
     }
 
+    if attachments:
+        payload["attachments"] = attachments
+
     headers = {
         "Authorization": f"Bearer {SENDGRID_API_KEY}",
         "Content-Type": "application/json"
     }
 
     try:
-        r = requests.post(SENDGRID_URL, headers=headers, data=json.dumps(payload), timeout=10)
+        r = requests.post(SENDGRID_URL, headers=headers, data=json.dumps(payload), timeout=20)
         r.raise_for_status()
         return True
     except Exception as e:
-        # In development it's helpful to know why sending failed
         print("SendGrid send failed:", e)
         try:
             print("Response:", r.status_code, r.text)
         except Exception:
             pass
-        print("OTP (fallback):", text)
         return False
 
 
 def send_otp_email(recipient_email: str, otp: str) -> bool:
-    """Send OTP via SendGrid API. Returns True on success, False on failure.
-
-    Environment variables required:
-      - SENDGRID_API_KEY (create a free SendGrid account and get an API key)
-      - SENDER_EMAIL (verified sender)
-
-    If no API key is present the function will print the OTP as a dev fallback.
-    """
-
     subject = "Your HealthTech OTP"
     body_text = f"Your one-time code is: {otp}\nIt expires in 2 minutes."
     body_html = f"<p>Your one-time code is: <strong>{otp}</strong></p><p>It expires in 2 minutes.</p>"
-
     return _send_via_sendgrid(recipient_email, subject, body_text, body_html)
+
+
+def send_report_email(recipient_email: str, subject: str, text: str, html: str, pdf_path: str) -> bool:
+    if not SENDGRID_API_KEY:
+        print("SendGrid API key not set — report email (dev fallback):", subject)
+        return False
+
+    try:
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+    except Exception as e:
+        print("Failed to read PDF for attachment:", e)
+        return False
+
+    encoded = base64.b64encode(pdf_bytes).decode("ascii")
+    attachment = [{
+        "content": encoded,
+        "type": "application/pdf",
+        "filename": pdf_path.split('/')[-1],
+        "disposition": "attachment"
+    }]
+
+    return _send_via_sendgrid(recipient_email, subject, text, html, attachments=attachment)
