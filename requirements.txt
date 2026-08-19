@@ -4,3 +4,5 @@ presidio-analyzer
 presidio-anonymizer
 python-jose[cryptography]
 reportlab
+requests
+python-dotenv

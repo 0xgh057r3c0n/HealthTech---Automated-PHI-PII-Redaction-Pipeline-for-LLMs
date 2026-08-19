@@ -269,6 +269,40 @@
             font-size: 0.92rem;
         }
 
+        .captcha-not-configured {
+            margin: 14px 0 18px;
+            padding: 10px 12px;
+            border: 1px solid rgba(248, 113, 113, 0.45);
+            border-radius: 10px;
+            background: rgba(127, 29, 29, 0.25);
+            color: #fecaca;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .auth-message {
+            display: none;
+            margin: 0 0 16px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .auth-message.error {
+            display: block;
+            background: rgba(127, 29, 29, 0.30);
+            border: 1px solid rgba(248, 113, 113, 0.45);
+            color: #fee2e2;
+        }
+
+        .auth-message.success {
+            display: block;
+            background: rgba(20, 83, 45, 0.25);
+            border: 1px solid rgba(74, 222, 128, 0.45);
+            color: #dcfce7;
+        }
+
         .hidden { display: none; }
 
         @keyframes floatBlob {
@@ -326,16 +360,23 @@
                 <div id="loginForm">
                     <h2>Sign in</h2>
                     <p class="subtext">Use your secure care-team credentials.</p>
+                    <div id="loginMessage" class="auth-message" aria-live="polite"></div>
                     <label for="user">Username</label>
                     <input id="user" placeholder="Enter username" />
                     <label for="pass">Password</label>
                     <input id="pass" type="password" placeholder="Enter password" />
+                    {% if recaptcha_site_key %}
+                    <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-callback="onLoginCaptcha"></div>
+                    {% else %}
+                    <div class="captcha-not-configured">reCAPTCHA is not configured on this server. Add your Google site key in .env to enable login.</div>
+                    {% endif %}
                     <button onclick="login()">Open Dashboard</button>
                 </div>
 
                 <div id="registerForm" class="hidden">
                     <h2>Create account</h2>
                     <p class="subtext">Register with email OTP verification.</p>
+                    <div id="registerMessage" class="auth-message" aria-live="polite"></div>
                     <label for="regUser">Username</label>
                     <input id="regUser" placeholder="Choose username" />
                     <label for="regEmail">Email</label>
@@ -347,6 +388,11 @@
                         <option value="patient">Patient</option>
                         <option value="doctor">Doctor</option>
                     </select>
+                    {% if recaptcha_site_key %}
+                    <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" data-callback="onRegCaptcha"></div>
+                    {% else %}
+                    <div class="captcha-not-configured">reCAPTCHA is not configured on this server. Add your Google site key in .env to enable registration.</div>
+                    {% endif %}
                     <button onclick="registerSendOtp()">Send OTP</button>
                     <div id="otpSection" class="hidden" style="margin-top: 14px;">
                         <label for="regOtp">OTP Code</label>
@@ -360,12 +406,38 @@
         </section>
     </div>
 
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
+        // captcha callbacks store tokens here
+        var loginCaptchaToken = "";
+        var registerCaptchaToken = "";
+        function onLoginCaptcha(token) { loginCaptchaToken = token; }
+        function onRegCaptcha(token) { registerCaptchaToken = token; }
+
+        function setAuthMessage(elId, message, type) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.textContent = message || "";
+            el.classList.remove('error', 'success');
+            if (message) {
+                el.classList.add(type || 'error');
+            }
+        }
+
+        function clearAuthMessage(elId) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            el.textContent = "";
+            el.classList.remove('error', 'success');
+        }
+
         function showLogin() {
             document.getElementById('loginForm').classList.remove('hidden');
             document.getElementById('registerForm').classList.add('hidden');
             document.getElementById('loginBtn').classList.add('active');
             document.getElementById('registerBtn').classList.remove('active');
+            clearAuthMessage('loginMessage');
+            clearAuthMessage('registerMessage');
         }
 
         function showRegister() {
@@ -373,6 +445,8 @@
             document.getElementById('registerForm').classList.remove('hidden');
             document.getElementById('registerBtn').classList.add('active');
             document.getElementById('loginBtn').classList.remove('active');
+            clearAuthMessage('loginMessage');
+            clearAuthMessage('registerMessage');
         }
 
         async function login() {
@@ -381,7 +455,8 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username: document.getElementById("user").value,
-                    password: document.getElementById("pass").value
+                    password: document.getElementById("pass").value,
+                    captcha: loginCaptchaToken
                 })
             });
 
@@ -392,7 +467,7 @@
                 localStorage.setItem("role", data.role);
                 window.location.href = "/dashboard";
             } else {
-                alert(data.error || "Unable to login.");
+                setAuthMessage('loginMessage', data.error || 'Unable to login. Please check your credentials and try again.', 'error');
             }
         }
 
@@ -404,18 +479,19 @@
                     username: document.getElementById("regUser").value,
                     email: document.getElementById("regEmail").value,
                     password: document.getElementById("regPass").value,
-                    role: document.getElementById("regRole").value
+                    role: document.getElementById("regRole").value,
+                    captcha: registerCaptchaToken
                 })
             });
 
             const data = await response.json();
             if (data.error) {
-                alert(data.error);
+                setAuthMessage('registerMessage', data.error, 'error');
                 return;
             }
 
             document.getElementById("otpSection").classList.remove("hidden");
-            alert("OTP sent to your email. Use the code shown in the server terminal.");
+            setAuthMessage('registerMessage', 'OTP sent successfully. Use the code from your email to complete registration.', 'success');
         }
 
         async function registerVerify() {
@@ -437,7 +513,7 @@
                 localStorage.setItem("role", data.role);
                 window.location.href = "/dashboard";
             } else {
-                alert(data.error || "Registration failed.");
+                setAuthMessage('registerMessage', data.error || 'Registration failed. Please try again.', 'error');
             }
         }
     </script>

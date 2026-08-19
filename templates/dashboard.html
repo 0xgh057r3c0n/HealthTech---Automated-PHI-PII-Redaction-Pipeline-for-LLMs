@@ -323,6 +323,7 @@
                 <h2 class="result-title">Clinical Summary</h2>
                 <div class="output" id="output">No clinical summary yet</div>
                 <a class="report-link" id="reportLink" href="#" style="display: none;">Download PDF report</a>
+                <button id="emailReportBtn" class="primary" style="display:none;margin-top:8px;" onclick="emailReport()">Email Report</button>
             </section>
         </div>
     </div>
@@ -402,8 +403,12 @@
                 reportLink.style.display = "inline-block";
                 reportLink.href = "/" + data.report_path.replace(/\\/g, "/");
                 reportLink.innerText = "Download PDF report";
+                const emailBtn = document.getElementById('emailReportBtn');
+                emailBtn.style.display = 'inline-block';
+                emailBtn.dataset.filename = data.report_path.split('/').pop();
             } else {
                 reportLink.style.display = "none";
+                document.getElementById('emailReportBtn').style.display = 'none';
             }
         }
 
@@ -411,6 +416,23 @@
             localStorage.removeItem("token");
             localStorage.removeItem("role");
             window.location.href = "/";
+        }
+
+        async function emailReport() {
+            const btn = document.getElementById('emailReportBtn');
+            const filename = btn.dataset.filename;
+            if (!filename) return alert('No report file known');
+            const response = await fetch('/email-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ filename: filename })
+            });
+            const data = await response.json();
+            if (data.message) alert('Email sent to ' + data.recipient);
+            else alert('Failed to send email: ' + (data.error || 'unknown'));
         }
     </script>
 </body>
